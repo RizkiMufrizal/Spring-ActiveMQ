@@ -15,8 +15,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
-import org.springframework.jms.support.converter.MessageConverter;
 
 /**
  *
@@ -27,7 +25,7 @@ public class ActiveMQConfiguration {
 
     @Autowired
     private Environment environment;
-    
+
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -37,15 +35,23 @@ public class ActiveMQConfiguration {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return objectMapper;
     }
-    
+
     @Bean
-    public ActiveMQConnectionFactory connectionFactory(){
+    public ActiveMQConnectionFactory connectionFactory() {
         return new ActiveMQConnectionFactory(environment.getRequiredProperty("spring.activemq.user"), environment.getRequiredProperty("spring.activemq.password"), environment.getRequiredProperty("spring.activemq.broker-url"));
     }
 
     @Bean
     public ActiveMQQueue activeMQQueue() {
         return new ActiveMQQueue(environment.getRequiredProperty("spring.activemq.default.destination"));
+    }
+
+    @Bean
+    public JmsListenerContainerFactory<?> topicListenerFactory(ConnectionFactory connectionFactory, DefaultJmsListenerContainerFactoryConfigurer defaultJmsListenerContainerFactoryConfigurer) {
+        DefaultJmsListenerContainerFactory defaultJmsListenerContainerFactory = new DefaultJmsListenerContainerFactory();
+        defaultJmsListenerContainerFactoryConfigurer.configure(defaultJmsListenerContainerFactory, connectionFactory);
+        defaultJmsListenerContainerFactory.setPubSubDomain(Boolean.TRUE);
+        return defaultJmsListenerContainerFactory;
     }
 
     @Bean
